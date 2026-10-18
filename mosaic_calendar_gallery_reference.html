@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mosaic — Calendar Gallery UI Reference</title>
+<style>
+:root{
+  --paper:#f7f6f2; --surface:#fffefa; --ink:#242522; --muted:#8d8d85;
+  --line:#e9e7e0; --soft:#efeee8; --accent:#22231f; --radius:22px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#ecebe6;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.workspace{max-width:1180px;margin:0 auto;padding:34px 24px 56px}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:0 0 24px}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#77776f;margin-bottom:8px}
+h1{font-size:25px;font-weight:500;letter-spacing:-.04em;margin:0}
+.page-head p{max-width:420px;color:#77776f;font-size:13px;line-height:1.65;margin:0}
+.showcase{display:grid;grid-template-columns:minmax(320px,390px) minmax(280px,1fr);gap:42px;align-items:start}
+.phone-wrap{display:flex;justify-content:center}
+.phone{width:375px;min-height:790px;background:var(--paper);border:7px solid #242522;border-radius:43px;box-shadow:0 25px 60px #25251e22;overflow:hidden;position:relative}
+.status{height:35px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:11px;font-weight:650;background:var(--paper)}
+.status-icons{letter-spacing:2px;font-size:10px}
+.app{padding:10px 14px 86px}
+.monthbar{display:flex;align-items:center;justify-content:space-between;padding:3px 1px 16px}
+.month-label{font-size:25px;font-weight:450;letter-spacing:-.055em}
+.month-actions{display:flex;gap:7px}
+.icon-btn{width:30px;height:30px;border:0;background:transparent;border-radius:50%;color:#393a35;font-size:21px;line-height:1;display:grid;place-items:center}
+.icon-btn:hover{background:#e9e7df}
+.filters{display:flex;gap:6px;overflow-x:auto;padding:0 0 17px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.filter{flex:none;border:1px solid #e5e3dc;background:transparent;color:#66675f;border-radius:99px;padding:7px 12px;font-size:11px;white-space:nowrap}
+.filter.active{background:#252620;border-color:#252620;color:#fff}
+.weekdays,.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.weekdays{margin-bottom:8px}
+.weekdays div{text-align:center;font-size:9px;color:#8e8e86;padding:0 0 4px}
+.calendar{gap:4px}
+.day{min-width:0;aspect-ratio:.72;border-radius:5px;position:relative;background:transparent;overflow:hidden;border:1px solid transparent;display:flex;flex-direction:column;align-items:stretch;padding:0;transition:background .15s,border-color .15s}
+.day:hover{border-color:#d9d7cf;background:#eeede7}
+.day.other-month{opacity:.33}
+.day-number{font-size:9px;color:#7e7f77;text-align:left;padding:4px 0 3px 4px;height:18px;flex:none}
+.day.today .day-number{color:#222;font-weight:800}
+.thumb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:2px;flex:1;min-height:0;padding:0 2px 2px}
+.thumb-grid.one{grid-template-columns:1fr;grid-template-rows:1fr}
+.thumb-grid.two{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:1fr}
+.thumb{border-radius:2px;min-width:0;min-height:0;overflow:hidden;position:relative;background:#d7d1c4}
+.thumb:before,.big-art:before{content:"";position:absolute;inset:0;background:linear-gradient(145deg,transparent 35%,#171a1724 36%,transparent 60%),radial-gradient(ellipse at 75% 20%,#fff7 0 3%,transparent 4%),linear-gradient(160deg,var(--c1),var(--c2))}
+.thumb:after,.big-art:after{content:"";position:absolute;left:-10%;right:-10%;height:42%;bottom:-7%;background:var(--land,#5f7869);clip-path:polygon(0 45%,23% 15%,39% 54%,61% 0,100% 42%,100% 100%,0 100%);opacity:.88}
+.thumb.book:before,.big-art.book:before{background:linear-gradient(90deg,#0002,transparent 14%),linear-gradient(135deg,var(--c1),var(--c2))}
+.thumb.book:after{left:18%;right:18%;bottom:14%;height:65%;background:linear-gradient(180deg,#f4ead6,#dfd2b7);clip-path:polygon(0 0,100% 0,100% 100%,0 95%);box-shadow:0 3px 8px #0002;opacity:1}
+.thumb.film:after,.big-art.film:after{height:54%;background:#29312f;clip-path:polygon(0 100%,0 65%,20% 30%,45% 65%,62% 10%,100% 50%,100% 100%)}
+.thumb.music:before,.big-art.music:before{background:radial-gradient(circle at 50% 48%,#171b1c 0 17%,#d8cbb2 18% 20%,#272a2a 21% 30%,transparent 31%),linear-gradient(135deg,var(--c1),var(--c2))}
+.thumb.music:after{display:none}
+.thumb.comic:before,.big-art.comic:before{background:linear-gradient(135deg,var(--c1),var(--c2));}
+.thumb.comic:after{background:#e8d4b8;clip-path:polygon(10% 10%,45% 0,53% 30%,95% 22%,90% 85%,48% 100%,25% 68%,0 80%);opacity:.9}
+.thumb.podcast:before,.big-art.podcast:before{background:radial-gradient(ellipse at center,#d9c6a4 0 15%,transparent 16%),linear-gradient(145deg,var(--c1),var(--c2))}
+.thumb.podcast:after{left:35%;right:35%;height:60%;background:#eee5d5;clip-path:polygon(40% 0,60% 0,60% 55%,100% 55%,100% 72%,60% 72%,60% 100%,40% 100%,40% 72%,0 72%,0 55%,40% 55%);opacity:.7}
+.thumb span{position:absolute;z-index:2;left:3px;right:3px;bottom:3px;font-size:5px;letter-spacing:.02em;color:#fff;text-shadow:0 1px 3px #000;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.more-count{position:absolute;right:3px;bottom:3px;background:#222c;color:#fff;border-radius:8px;font-size:8px;padding:2px 4px;z-index:3}
+.add-fab{position:absolute;bottom:31px;right:20px;width:48px;height:48px;border-radius:50%;border:0;background:#252620;color:#fff;font-size:29px;font-weight:300;box-shadow:0 5px 15px #0002;display:grid;place-items:center}
+.home-indicator{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:108px;height:4px;background:#191a18;border-radius:99px}
+.notes{padding-top:10px}
+.notes h2{font-size:18px;font-weight:500;margin:0 0 8px;letter-spacing:-.03em}
+.notes .intro{font-size:13px;line-height:1.7;color:#77776f;max-width:520px;margin:0 0 24px}
+.spec-list{display:grid;gap:10px}
+.spec{display:grid;grid-template-columns:30px 1fr;gap:12px;padding:15px 0;border-top:1px solid #d9d7d0}
+.spec-num{font-size:11px;color:#929188;padding-top:3px}
+.spec h3{font-size:13px;font-weight:600;margin:0 0 5px}
+.spec p{font-size:12px;line-height:1.65;color:#74746c;margin:0}
+.token-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}
+.token{font-size:11px;border:1px solid #d9d7d0;padding:7px 10px;border-radius:99px;color:#67675f}
+.modal-backdrop{position:absolute;inset:0;background:#191a1870;display:none;align-items:flex-end;z-index:10}
+.modal-backdrop.open{display:flex}
+.sheet{width:100%;background:#fbfaf6;border-radius:24px 24px 0 0;padding:20px 18px 36px;max-height:88%;overflow:auto;box-shadow:0 -10px 35px #0002}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.sheet-head h2{font-size:17px;font-weight:600;margin:0}
+.close-btn{border:0;background:transparent;font-size:24px;color:#777}
+.day-records{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.record-card{border:0;background:#f0eee7;border-radius:12px;overflow:hidden;text-align:left;padding:0;color:inherit}
+.record-art{height:130px;position:relative;overflow:hidden}
+.record-copy{padding:10px 11px 12px}
+.record-copy strong{display:block;font-size:12px;font-weight:600;margin-bottom:4px}
+.record-copy span{font-size:10px;color:#77776f}
+.form-row{margin:13px 0}
+.form-row label{display:block;font-size:11px;color:#77776f;margin-bottom:7px}
+.form-row input,.form-row textarea,.form-row select{width:100%;border:1px solid #e0ded6;border-radius:10px;padding:11px 12px;background:#fffefa;outline:none;font-size:13px;color:#282923}
+.form-row textarea{min-height:70px;resize:vertical}
+.type-options{display:flex;gap:6px;flex-wrap:wrap}
+.type-chip{border:1px solid #e0ded6;background:transparent;border-radius:99px;padding:7px 10px;font-size:11px;color:#666}
+.type-chip.active{background:#252620;color:#fff;border-color:#252620}
+.photo-pick{height:130px;border:1px dashed #c9c6bc;background:#f0eee7;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#73736b;font-size:12px;position:relative;overflow:hidden}
+.photo-pick input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.photo-pick .preview{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+.primary{width:100%;border:0;border-radius:99px;background:#252620;color:#fff;padding:13px;font-size:12px;margin-top:8px}
+.secondary{width:100%;border:1px solid #dedcd4;border-radius:99px;background:transparent;color:#555;padding:12px;font-size:12px;margin-top:8px}
+.empty{font-size:12px;color:#88877f;line-height:1.7;padding:22px 5px;text-align:center}
+.toast{position:absolute;top:42px;left:50%;transform:translateX(-50%);background:#252620;color:#fff;padding:9px 14px;border-radius:99px;font-size:11px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+.toast.show{opacity:1}
+@media(max-width:850px){.workspace{padding:20px 12px 40px}.page-head{display:block}.page-head p{margin-top:10px}.showcase{grid-template-columns:1fr;gap:25px}.notes{max-width:500px;margin:0 auto}.phone{width:min(375px,100%);min-height:760px}}
+@media(min-width:851px){.phone{transform:scale(.96);transform-origin:top center}.phone-wrap{height:780px}}
+</style>
+</head>
+<body>
+<div class="workspace">
+  <header class="page-head">
+    <div><div class="eyebrow">MOSAIC · IOS UI REFERENCE</div><h1>Calendar Gallery</h1></div>
+    <p>交互式视觉规格页。点击月份、分类、日期和「＋」体验核心交互；这个 HTML 可作为不支持读图的开发 Agent 的明确 UI 参考。</p>
+  </header>
+  <main class="showcase">
+    <div class="phone-wrap">
+      <section class="phone" aria-label="Mosaic iPhone preview">
+        <div class="status"><span>9:41</span><span class="status-icons">▮▮▮　◉　▰</span></div>
+        <div class="app">
+          <div class="monthbar">
+            <div class="month-label" id="monthLabel">October 2026</div>
+            <div class="month-actions">
+              <button class="icon-btn" id="prevMonth" aria-label="Previous month">‹</button>
+              <button class="icon-btn" id="nextMonth" aria-label="Next month">›</button>
+            </div>
+          </div>
+          <div class="filters" id="filters" aria-label="Media type filters"></div>
+          <div class="weekdays"><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div><div>SUN</div></div>
+          <div class="calendar" id="calendar"></div>
+        </div>
+        <button class="add-fab" id="addButton" aria-label="Add a record">+</button>
+        <div class="home-indicator"></div>
+        <div class="toast" id="toast"></div>
+        <div class="modal-backdrop" id="dayModal">
+          <section class="sheet">
+            <div class="sheet-head"><h2 id="dayTitle">October 12, 2026</h2><button class="close-btn" data-close="dayModal">×</button></div>
+            <div class="day-records" id="dayRecords"></div>
+            <button class="primary" id="addForDay">Add a record for this day</button>
+          </section>
+        </div>
+        <div class="modal-backdrop" id="addModal">
+          <section class="sheet">
+            <div class="sheet-head"><h2>Add a record</h2><button class="close-btn" data-close="addModal">×</button></div>
+            <form id="recordForm">
+              <div class="photo-pick" id="photoPick"><span style="font-size:23px">＋</span><span>Choose a photo from your library</span><img class="preview" id="photoPreview" alt="Selected image preview"><input type="file" id="photoInput" accept="image/*" aria-label="Choose image"></div>
+              <div class="form-row"><label>TYPE</label><div class="type-options" id="typeOptions"></div></div>
+              <div class="form-row"><label for="titleInput">TITLE *</label><input id="titleInput" required placeholder="Name of the book, film, album…"></div>
+              <div class="form-row"><label for="creatorInput">CREATOR (OPTIONAL)</label><input id="creatorInput" placeholder="Author, director, artist"></div>
+              <div class="form-row"><label for="dateInput">RECORD DATE</label><input id="dateInput" type="date" required></div>
+              <div class="form-row"><label for="noteInput">PERSONAL NOTE (OPTIONAL)</label><textarea id="noteInput" placeholder="A thought you want to keep…"></textarea></div>
+              <button class="primary" type="submit">Save record</button>
+            </form>
+          </section>
+        </div>
+        <div class="modal-backdrop" id="detailModal">
+          <section class="sheet">
+            <div class="sheet-head"><h2>Record</h2><button class="close-btn" data-close="detailModal">×</button></div>
+            <div id="detailContent"></div>
+            <button class="secondary" data-close="detailModal">Close</button>
+          </section>
+        </div>
+      </section>
+    </div>
+    <aside class="notes">
+      <h2>Design specification</h2>
+      <p class="intro">The gallery itself is the home screen. No app title or logo inside the screen. Images should feel like collected fragments, not conventional media-management cards.</p>
+      <div class="spec-list">
+        <div class="spec"><div class="spec-num">01</div><div><h3>Month navigation</h3><p>Current month is the only heading. Left/right controls change the calendar. The selected media filter remains active while navigating.</p></div></div>
+        <div class="spec"><div class="spec-num">02</div><div><h3>Horizontal filters</h3><p>All, Movies, Books, Comics, Music, Podcasts, Games and Other. Use a compact pill row; scroll horizontally instead of wrapping into multiple lines.</p></div></div>
+        <div class="spec"><div class="spec-num">03</div><div><h3>Seven-column calendar</h3><p>Monday-first calendar. Every date occupies a stable cell. Show a small, low-contrast date label and image thumbnails below it. Empty dates stay quiet.</p></div></div>
+        <div class="spec"><div class="spec-num">04</div><div><h3>Multiple records per day</h3><p>Use a 1-up, 2-up or 2×2 miniature collage according to the number of entries. If there are more than four, show a subtle “+N” marker.</p></div></div>
+        <div class="spec"><div class="spec-num">05</div><div><h3>Add flow</h3><p>Photo first, then type, title, optional creator, record date and optional personal note. Saving inserts the record into its actual date and category.</p></div></div>
+        <div class="spec"><div class="spec-num">06</div><div><h3>Visual tokens</h3><p>Warm off-white background, near-black text, muted gray labels, hairline separators, restrained rounded controls and generous whitespace. No gradients on UI surfaces or heavy shadows.</p></div></div>
+      </div>
+      <div class="token-row"><span class="token">Background #F7F6F2</span><span class="token">Surface #FFFEFA</span><span class="token">Text #242522</span><span class="token">Muted #8D8D85</span><span class="token">Hairline #E9E7E0</span></div>
+    </aside>
+  </main>
+</div>
+<script>
+const TYPES = ["全部","电影","书籍","漫画","音乐","播客","游戏","其他"];
+const EN_TYPES = {"全部":"All","电影":"Movies","书籍":"Books","漫画":"Comics","音乐":"Music","播客":"Podcasts","游戏":"Games","其他":"Other"};
+const TYPE_CLASS = {"电影":"film","书籍":"book","漫画":"comic","音乐":"music","播客":"podcast","游戏":"film","其他":"book"};
+const PALETTES = [
+  ["#a7bdc2","#476c7c","#3f645f"],["#d6bca2","#9a715b","#596f66"],["#e3d9c8","#b8a27f","#74877d"],
+  ["#c8c4b4","#6d7770","#4d655e"],["#b8c4cc","#526b83","#3e4f62"],["#d8b8a8","#8b594c","#4b5554"],
+  ["#b6b9a7","#7b856d","#475b4c"],["#d8c9a9","#b28d5d","#657a70"],["#b7b0c7","#776d8d","#4b5368"]
+];
+let currentMonth = new Date(2026,9,1);
+let activeType = "全部";
+let selectedType = "书籍";
+let selectedDate = null;
+let nextId = 100;
+let selectedImageData = null;
+const records = [
+ {id:1,date:"2026-10-03",type:"电影",title:"Perfect Days",creator:"Wim Wenders",palette:0},
+ {id:2,date:"2026-10-04",type:"漫画",title:"Blue Period",creator:"Tsubasa Yamaguchi",palette:4},
+ {id:3,date:"2026-10-08",type:"书籍",title:"Sapiens",creator:"Yuval Noah Harari",palette:2},
+ {id:4,date:"2026-10-08",type:"电影",title:"In the Mood for Love",creator:"Wong Kar-wai",palette:5},
+ {id:5,date:"2026-10-09",type:"音乐",title:"Kind of Blue",creator:"Miles Davis",palette:3},
+ {id:6,date:"2026-10-12",type:"书籍",title:"Sapiens",creator:"Yuval Noah Harari",palette:2},
+ {id:7,date:"2026-10-12",type:"电影",title:"The Secret Life of Walter Mitty",creator:"Ben Stiller",palette:0},
+ {id:8,date:"2026-10-12",type:"音乐",title:"The 1975",creator:"The 1975",palette:6},
+ {id:9,date:"2026-10-13",type:"漫画",title:"Look Back",creator:"Tatsuki Fujimoto",palette:5},
+ {id:10,date:"2026-10-15",type:"书籍",title:"Norwegian Wood",creator:"Haruki Murakami",palette:7},
+ {id:11,date:"2026-10-16",type:"电影",title:"Past Lives",creator:"Celine Song",palette:1},
+ {id:12,date:"2026-10-18",type:"播客",title:"Design Matters",creator:"Debbie Millman",palette:8},
+ {id:13,date:"2026-10-19",type:"书籍",title:"The Creative Act",creator:"Rick Rubin",palette:2},
+ {id:14,date:"2026-10-19",type:"漫画",title:"Solanin",creator:"Inio Asano",palette:7},
+ {id:15,date:"2026-10-20",type:"音乐",title:"Blue",creator:"Joni Mitchell",palette:4},
+ {id:16,date:"2026-10-22",type:"电影",title:"Chungking Express",creator:"Wong Kar-wai",palette:5},
+ {id:17,date:"2026-10-24",type:"书籍",title:"Ways of Seeing",creator:"John Berger",palette:3},
+ {id:18,date:"2026-10-28",type:"电影",title:"Aftersun",creator:"Charlotte Wells",palette:0}
+];
+const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const niceDate = s => new Date(s+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+function toast(msg){const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");setTimeout(()=>el.classList.remove("show"),1800)}
+function visibleRecords(date){return records.filter(r=>r.date===date&&(activeType==="全部"||r.type===activeType))}
+function artStyle(rec){if(rec.image)return `background-image:url('${rec.image}');background-size:cover;background-position:center;`;const p=PALETTES[rec.palette%PALETTES.length];return `--c1:${p[0]};--c2:${p[1]};--land:${p[2]};`}
+function makeThumb(rec,large=false){const div=document.createElement("div");div.className=`thumb ${TYPE_CLASS[rec.type]||"book"}`;div.style.cssText=artStyle(rec);if(rec.image){div.style.backgroundImage=`url('${rec.image}')`;div.style.backgroundSize="cover";div.style.backgroundPosition="center";div.classList.remove("book","film","music","comic","podcast")}return div}
+function renderFilters(){const root=document.getElementById("filters");root.innerHTML="";TYPES.forEach(t=>{const b=document.createElement("button");b.className="filter"+(t===activeType?" active":"");b.textContent=t;b.title=EN_TYPES[t];b.onclick=()=>{activeType=t;renderFilters();renderCalendar()};root.appendChild(b)})}
+function renderCalendar(){
+ const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
+ document.getElementById("monthLabel").textContent=currentMonth.toLocaleDateString("en-US",{month:"long",year:"numeric"});
+ const first=new Date(y,m,1);let mondayIndex=(first.getDay()+6)%7;
+ const start=new Date(y,m,1-mondayIndex);
+ const total=Math.ceil((mondayIndex+new Date(y,m+1,0).getDate())/7)*7;
+ const root=document.getElementById("calendar");root.innerHTML="";
+ const today=fmt(new Date());
+ for(let i=0;i<total;i++){
+  const date=new Date(start);date.setDate(start.getDate()+i);const key=fmt(date);
+  const cell=document.createElement("button");cell.className="day"+(date.getMonth()!==m?" other-month":"")+(key===today?" today":"");
+  cell.setAttribute("aria-label",key);
+  const num=document.createElement("div");num.className="day-number";num.textContent=date.getDate();cell.appendChild(num);
+  const entries=visibleRecords(key);
+  if(entries.length){
+   const grid=document.createElement("div");grid.className="thumb-grid "+(entries.length===1?"one":entries.length===2?"two":"");
+   entries.slice(0,4).forEach(rec=>grid.appendChild(makeThumb(rec)));
+   cell.appendChild(grid);
+   if(entries.length>4){const more=document.createElement("span");more.className="more-count";more.textContent="+"+(entries.length-4);cell.appendChild(more)}
+  }
+  cell.onclick=()=>openDay(key);root.appendChild(cell);
+ }
+}
+function openModal(id){document.getElementById(id).classList.add("open")}
+function closeModal(id){document.getElementById(id).classList.remove("open")}
+function openDay(key){
+ selectedDate=key;document.getElementById("dayTitle").textContent=new Date(key+"T12:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
+ const root=document.getElementById("dayRecords");root.innerHTML="";
+ const entries=records.filter(r=>r.date===key);
+ if(!entries.length){root.innerHTML='<div class="empty" style="grid-column:1/-1">No records on this date yet.<br>Add a photo to start your collection.</div>'}
+ entries.forEach(rec=>{
+  const card=document.createElement("button");card.className="record-card";
+  const art=document.createElement("div");art.className="record-art big-art "+(TYPE_CLASS[rec.type]||"book");art.style.cssText=artStyle(rec);
+  if(rec.image){art.style.backgroundImage=`url('${rec.image}')`;art.style.backgroundSize="cover";art.style.backgroundPosition="center";art.classList.remove("book","film","music","comic","podcast")}
+  const copy=document.createElement("div");copy.className="record-copy";copy.innerHTML=`<strong>${escapeHtml(rec.title)}</strong><span>${escapeHtml(rec.type)}${rec.creator?" · "+escapeHtml(rec.creator):""}</span>`;
+  card.append(art,copy);card.onclick=()=>{closeModal("dayModal");openDetail(rec)};root.appendChild(card);
+ });
+ openModal("dayModal");
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function openDetail(rec){
+ const root=document.getElementById("detailContent");root.innerHTML="";
+ const art=document.createElement("div");art.className="record-art big-art "+(TYPE_CLASS[rec.type]||"book");art.style.cssText=artStyle(rec)+"height:210px;border-radius:14px";
+ if(rec.image){art.style.backgroundImage=`url('${rec.image}')`;art.style.backgroundSize="cover";art.style.backgroundPosition="center";art.classList.remove("book","film","music","comic","podcast")}
+ const copy=document.createElement("div");copy.style.padding="16px 2px";
+ copy.innerHTML=`<div style="font-size:10px;color:#8d8d85;margin-bottom:7px">${escapeHtml(rec.type.toUpperCase())} · ${niceDate(rec.date)}</div><div style="font-size:22px;letter-spacing:-.04em;margin-bottom:5px">${escapeHtml(rec.title)}</div><div style="font-size:12px;color:#77776f;margin-bottom:14px">${escapeHtml(rec.creator||"")}</div><div style="font-size:13px;line-height:1.65">${escapeHtml(rec.note||"")}</div>`;
+ root.append(art,copy);openModal("detailModal");
+}
+function renderTypes(){const root=document.getElementById("typeOptions");root.innerHTML="";TYPES.filter(t=>t!=="全部").forEach(t=>{const b=document.createElement("button");b.type="button";b.className="type-chip"+(t===selectedType?" active":"");b.textContent=t;b.onclick=()=>{selectedType=t;renderTypes()};root.appendChild(b)})}
+function openAdd(){
+ document.getElementById("recordForm").reset();selectedImageData=null;
+ document.getElementById("photoPreview").style.display="none";
+ document.getElementById("photoPick").querySelectorAll("span").forEach(s=>s.style.display="");
+ document.getElementById("dateInput").value=selectedDate||fmt(new Date());
+ selectedType=activeType==="全部"?"书籍":activeType;renderTypes();openModal("addModal");
+}
+document.getElementById("prevMonth").onclick=()=>{currentMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()-1,1);renderCalendar()};
+document.getElementById("nextMonth").onclick=()=>{currentMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1,1);renderCalendar()};
+document.getElementById("addButton").onclick=()=>openAdd();
+document.getElementById("addForDay").onclick=()=>{closeModal("dayModal");openAdd()};
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
+document.querySelectorAll(".modal-backdrop").forEach(bg=>bg.addEventListener("click",e=>{if(e.target===bg)bg.classList.remove("open")}));
+document.getElementById("photoInput").addEventListener("change",e=>{
+ const file=e.target.files&&e.target.files[0];if(!file)return;
+ const reader=new FileReader();reader.onload=()=>{selectedImageData=reader.result;const img=document.getElementById("photoPreview");img.src=selectedImageData;img.style.display="block";document.getElementById("photoPick").querySelectorAll("span").forEach(s=>s.style.display="none")};reader.readAsDataURL(file)
+});
+document.getElementById("recordForm").addEventListener("submit",e=>{
+ e.preventDefault();const title=document.getElementById("titleInput").value.trim();if(!title)return;
+ const date=document.getElementById("dateInput").value||fmt(new Date());
+ records.push({id:nextId++,date,type:selectedType,title,creator:document.getElementById("creatorInput").value.trim(),note:document.getElementById("noteInput").value.trim(),palette:nextId%PALETTES.length,image:selectedImageData});
+ currentMonth=new Date(date+"T12:00:00");activeType="全部";renderFilters();renderCalendar();closeModal("addModal");toast("Record added to your gallery");
+});
+renderFilters();renderCalendar();renderTypes();
+</script>
+</body>
+</html>
