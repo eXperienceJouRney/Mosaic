@@ -2,7 +2,7 @@
 //  MosaicTabBar.swift
 //  Mosaic
 //
-//  底部导航：Gallery / Timeline。
+//  底部导航：Gallery / Timeline / Collections / Profile。
 //  不做系统 TabView 的外观定制，而是自绘一条纸感导航条，
 //  图标也用最少的线条画出来，和参考稿的 grid / line 图标一致。
 //
@@ -12,11 +12,15 @@ import SwiftUI
 enum MosaicTab: Hashable {
     case gallery
     case timeline
+    case collections
+    case profile
 
     var title: String {
         switch self {
         case .gallery: return "Gallery"
         case .timeline: return "Timeline"
+        case .collections: return "作品集"
+        case .profile: return "Profile"
         }
     }
 
@@ -24,6 +28,8 @@ enum MosaicTab: Hashable {
         switch self {
         case .gallery: return "galleryTabButton"
         case .timeline: return "timelineTabButton"
+        case .collections: return "collectionsTabButton"
+        case .profile: return "profileTabButton"
         }
     }
 }
@@ -35,6 +41,8 @@ struct MosaicTabBar: View {
         HStack(spacing: 0) {
             tabButton(.gallery) { GalleryTabIcon() }
             tabButton(.timeline) { TimelineTabIcon() }
+            tabButton(.collections) { Image(systemName: "books.vertical") }
+            tabButton(.profile) { Image(systemName: "person.crop.circle") }
         }
         .padding(.top, Theme.TabBar.top)
         .padding(.bottom, Theme.TabBar.bottom)
@@ -55,17 +63,13 @@ struct MosaicTabBar: View {
         return Button {
             selection = tab
         } label: {
-            HStack(spacing: Theme.TabBar.iconLabelGap) {
-                icon()
-                    .frame(width: Theme.TabBar.iconSize, height: Theme.TabBar.iconSize)
-
-                Text(tab.title)
-                    .font(isSelected ? Theme.Typography.tabLabelSelected : Theme.Typography.tabLabel)
-            }
-            .foregroundStyle(isSelected ? Theme.Palette.ink : Theme.Palette.tabInactive)
-            .frame(maxWidth: .infinity)
-            .frame(height: Theme.TabBar.hitHeight)
-            .contentShape(Rectangle())
+            icon()
+                .font(.system(size: Theme.TabBar.iconSize, weight: .regular))
+                .frame(width: Theme.TabBar.iconSize, height: Theme.TabBar.iconSize)
+                .foregroundStyle(isSelected ? Theme.Palette.ink : Theme.Palette.tabInactive)
+                .frame(maxWidth: .infinity)
+                .frame(height: Theme.TabBar.hitHeight)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier(tab.accessibilityIdentifier)

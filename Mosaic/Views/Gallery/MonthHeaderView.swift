@@ -13,20 +13,25 @@ struct MonthHeaderView: View {
     var onPrevious: () -> Void
     var onNext: () -> Void
     var onSelectMonth: () -> Void = {}
+    var onToday: () -> Void = {}
 
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
             Button(action: onSelectMonth) {
-                HStack(spacing: 5) {
-                    Text(MosaicCalendar.monthTitle(month))
-                        .font(Theme.Typography.month)
-                        .tracking(Theme.Tracking.month)
-                        .foregroundStyle(Theme.Palette.ink)
-
+                HStack(spacing: 7) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(MosaicCalendar.monthName(Calendar.current.component(.month, from: month)))
+                            .font(.system(size: 24, weight: .regular, design: .serif))
+                            .tracking(Theme.Tracking.month)
+                            .foregroundStyle(Theme.Palette.ink)
+                        Text(String(Calendar.current.component(.year, from: month)))
+                            .font(.system(size: 11, weight: .medium))
+                            .tracking(0.8)
+                            .foregroundStyle(Theme.Palette.muted)
+                    }
                     Image(systemName: "chevron.down")
                         .font(.system(size: 9, weight: .semibold))
                         .foregroundStyle(Theme.Palette.muted)
-                        .padding(.top, 3)
                 }
                 .contentShape(Rectangle())
             }
@@ -38,6 +43,16 @@ struct MonthHeaderView: View {
             Spacer(minLength: 12)
 
             HStack(spacing: 7) {
+                if !Calendar.current.isDate(month, equalTo: .now, toGranularity: .month) {
+                    Button(action: onToday) {
+                        Text("回到今天")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Theme.Palette.filterText)
+                            .padding(.horizontal, 9).padding(.vertical, 6)
+                            .overlay(Capsule().stroke(Theme.Palette.hairline))
+                    }
+                    .buttonStyle(.plain)
+                }
                 Button(action: onPrevious) {
                     Text("‹")
                         .font(Theme.Typography.iconButton)

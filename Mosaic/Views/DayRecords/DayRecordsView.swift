@@ -15,6 +15,7 @@ struct DayRecordsView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var items: [MediaItem]
     @State private var selectedItem: MediaItem?
+    @State private var isAddingRecord = false
 
     init(day: Date) {
         let start = MosaicCalendar.startOfDay(day)
@@ -35,7 +36,8 @@ struct DayRecordsView: View {
     )
 
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .bottomTrailing) {
+            VStack(spacing: 0) {
             ScreenHeader(
                 title: MosaicCalendar.fullDateTitle(day),
                 subtitle: "\(items.count) 条记录",
@@ -59,12 +61,19 @@ struct DayRecordsView: View {
                     .padding(.bottom, Theme.DayList.bottomPadding)
                 }
             }
+            }
+            AddRecordButton { isAddingRecord = true }
+                .padding(.trailing, 20)
+                .padding(.bottom, 12)
         }
         .background(Theme.Palette.paper.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden(true)
         .navigationDestination(item: $selectedItem) { item in
             RecordDetailView(item: item)
+        }
+        .fullScreenCover(isPresented: $isAddingRecord) {
+            AddRecordView(initialDate: day)
         }
     }
 

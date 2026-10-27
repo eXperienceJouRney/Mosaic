@@ -16,14 +16,25 @@ struct DayCellView: View {
     @State private var categoryStore = MediaCategoryStore.shared
 
     private var isToday: Bool { MosaicCalendar.isToday(day.date) }
+    private var cover: MediaItem? { items.first }
 
     var body: some View {
         Button(action: onTap) {
-            VStack(spacing: 0) {
+            ZStack {
+                if let cover {
+                    let category = categoryStore.category(for: cover.categoryID)
+                    RecordThumbnail(fileName: cover.imageFileName, symbolName: category.symbolName, maxPixel: 360)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    if !cover.imageFileName.isEmpty {
+                        LinearGradient(colors: [.clear, .black.opacity(0.15)], startPoint: .center, endPoint: .bottom)
+                    }
+                } else {
+                    Theme.Palette.soft
+                }
                 dayNumber
-                photoArea
             }
-            .overlay(alignment: .bottomTrailing) { moreBadge }
+            .aspectRatio(Theme.Grid.photoAspectRatio, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.cell, style: .continuous))
         }
         .buttonStyle(DayCellButtonStyle())
         .opacity(day.isInMonth ? 1 : 0.33)
@@ -35,29 +46,29 @@ struct DayCellView: View {
 
     // MARK: - 日号
 
+    @ViewBuilder
     private var dayNumber: some View {
-        Text("\(day.number)")
-            .font(isToday ? Theme.Typography.dayNumberToday : Theme.Typography.dayNumber)
-            .foregroundStyle(isToday ? Theme.Palette.ink : Theme.Palette.dayNumber)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, 4)
-            .padding(.top, 4)
-            .frame(height: Theme.Spacing.dayNumberHeight, alignment: .top)
+        if cover?.imageFileName.isEmpty != false {
+            Text("\(day.number)")
+                .font(isToday ? Theme.Typography.dayNumberToday : Theme.Typography.dayNumber)
+                .foregroundStyle(cover != nil || isToday ? Theme.Palette.onAccent : Theme.Palette.ink)
+                .padding(.horizontal, 8)
+                .frame(minWidth: 29, minHeight: 29)
+                .background {
+                    if cover != nil {
+                        Circle().fill(Theme.Palette.ink.opacity(0.68))
+                    } else if isToday {
+                        Circle().fill(Theme.Palette.accent)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
     }
 
     // MARK: - 图片区（4:3）
 
     @ViewBuilder
-    private var photoArea: some View {
-        if items.isEmpty {
-            // 空日期也占住 4:3 的高度，保证整行对齐。
-            Color.clear
-                .aspectRatio(Theme.Grid.photoAspectRatio, contentMode: .fit)
-        } else {
-            collage
-                .aspectRatio(Theme.Grid.photoAspectRatio, contentMode: .fit)
-        }
-    }
+    private var photoArea: some View { Color.clear }
 
     @ViewBuilder
     private var collage: some View {

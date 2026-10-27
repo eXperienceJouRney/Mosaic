@@ -28,6 +28,10 @@ final class MediaItem {
 
     var note: String = ""
 
+    /// Optional mood and collection association used by the expanded journal flow.
+    var mood: String = ""
+    var collectionID: UUID?
+
     /// 标签以逗号分隔的文本落库，对外仍然通过 `tags` 读写数组。
     /// 这样不用为标签单独建表，也能安全地做轻量迁移。
     var tagsRaw: String = ""
@@ -51,6 +55,8 @@ final class MediaItem {
         categoryID: String? = nil,
         rating: Int = 0,
         note: String = "",
+        mood: String = "",
+        collectionID: UUID? = nil,
         recordDate: Date = .now,
         imageFileName: String = "",
         pixelWidth: Double = 0,
@@ -65,6 +71,8 @@ final class MediaItem {
         self.kindRaw = categoryID ?? kind.rawValue
         self.rating = max(0, min(5, rating))
         self.note = note
+        self.mood = mood
+        self.collectionID = collectionID
         self.tagsRaw = MediaTags.serialize(tags)
         self.recordDate = MosaicCalendar.startOfDay(recordDate)
         self.imageFileName = imageFileName
@@ -109,6 +117,8 @@ final class MediaItem {
         title = draft.normalizedTitle
         creator = draft.normalizedCreator
         note = draft.normalizedNote
+        mood = draft.mood
+        collectionID = draft.collectionID
         tags = draft.tags
         recordDate = MosaicCalendar.startOfDay(draft.recordDate)
         touch()

@@ -12,6 +12,7 @@ import SwiftUI
 
 struct TimelineEntryRow: View {
     let item: MediaItem
+    var showsDate = true
     var onTap: () -> Void
 
     @State private var categoryStore = MediaCategoryStore.shared
@@ -47,15 +48,21 @@ struct TimelineEntryRow: View {
     // MARK: - 左列日期
 
     private var dateColumn: some View {
-        VStack(spacing: Theme.Timeline.weekdayTop) {
-            Text(String(format: "%02d", MosaicCalendar.dayNumber(of: item.recordDate)))
-                .font(Theme.Typography.timelineDay)
-                .monospacedDigit()
-                .foregroundStyle(Theme.Palette.ink)
+        Group {
+            if showsDate {
+                VStack(spacing: Theme.Timeline.weekdayTop) {
+                    Text(String(format: "%02d", MosaicCalendar.dayNumber(of: item.recordDate)))
+                        .font(Theme.Typography.timelineDay)
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.Palette.ink)
 
-            Text(MosaicCalendar.weekdayShortLabel(item.recordDate))
-                .font(Theme.Typography.timelineWeekday)
-                .foregroundStyle(Theme.Palette.weekdayLabel)
+                    Text(MosaicCalendar.weekdayShortLabel(item.recordDate))
+                        .font(Theme.Typography.timelineWeekday)
+                        .foregroundStyle(Theme.Palette.weekdayLabel)
+                }
+            } else {
+                Color.clear.frame(height: 28)
+            }
         }
         .frame(width: Theme.Timeline.dateColumnWidth)
         .padding(.top, Theme.Timeline.dateTop)

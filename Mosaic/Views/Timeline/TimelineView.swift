@@ -23,10 +23,18 @@ struct TimelineView: View {
     @State private var isYearPickerPresented = false
     @State private var selectedItem: MediaItem?
     @State private var isAddingRecord = false
+    @State private var searchText = ""
 
     var body: some View {
+        let filteredItems = items.filter { item in
+            let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !query.isEmpty else { return true }
+            return [item.title, item.creator, item.note, item.mood] .joined(separator: " ")
+                .localizedCaseInsensitiveContains(query)
+                || item.tags.contains { $0.localizedCaseInsensitiveContains(query) }
+        }
         let feed = TimelineFeed(
-            items: items,
+            items: filteredItems,
             year: year,
             range: range,
             categoryID: selectedCategoryID
@@ -43,6 +51,9 @@ struct TimelineView: View {
                 .padding(.horizontal, Theme.Spacing.screenPadding)
 
                 MediaFilterBar(selection: $selectedCategoryID)
+                    .padding(.horizontal, Theme.Spacing.screenPadding)
+
+                searchBar
                     .padding(.horizontal, Theme.Spacing.screenPadding)
 
                 TimelineRangeBar(selection: $range)
@@ -76,6 +87,27 @@ struct TimelineView: View {
         .fullScreenCover(isPresented: $isAddingRecord) {
             AddRecordView()
         }
+    }
+
+    private var searchBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(Theme.Palette.muted)
+            TextField("搜索作品、作者、感想或标签", text: $searchText)
+                .font(.system(size: 13))
+                .accessibilityIdentifier("timelineSearchField")
+            if !searchText.isEmpty {
+                Button { searchText = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(Theme.Palette.muted)
+                }
+                .accessibilityLabel("清除搜索")
+            }
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 38)
+        .background(Theme.Palette.soft, in: RoundedRectangle(cornerRadius: 11))
+        .padding(.bottom, 8)
     }
 
     // MARK: - 年份切换
@@ -118,8 +150,14 @@ struct TimelineView: View {
                     .padding(.bottom, Theme.Timeline.monthBottom)
                     .accessibilityIdentifier("timelineMonthHeader")
 
-                ForEach(section.items) { item in
-                    TimelineEntryRow(item: item) {
+                ForEach(Array(section.items.enumerated()), id: \.element.id) { pair in
+                    let index = pair.offset
+                    let item = pair.element
+                    let showsDate = index == 0 || !Calendar.current.isDate(
+                        section.items[index - 1].recordDate,
+                        inSameDayAs: item.recordDate
+                    )
+                    TimelineEntryRow(item: item, showsDate: showsDate) {
                         selectedItem = item
                     }
                     .padding(.bottom, Theme.Timeline.entryBottom)

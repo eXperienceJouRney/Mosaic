@@ -16,6 +16,8 @@ struct RecordDraft {
     var recordDate: Date = .now
     var note: String = ""
     var tagsText: String = ""
+    var mood: String = ""
+    var collectionID: UUID?
 
     /// 兼容按内置类型读写的调用方；自定义分类在这里回退到 .other。
     /// 真正落库的是 `categoryID`。
@@ -35,6 +37,8 @@ struct RecordDraft {
         recordDate = item.recordDate
         note = item.note
         tagsText = item.tags.joined(separator: ", ")
+        mood = item.mood
+        collectionID = item.collectionID
     }
 
     // MARK: - 校验
@@ -74,6 +78,8 @@ struct RecordDraft {
             kind: kind,
             categoryID: categoryID,
             note: normalizedNote,
+            mood: mood,
+            collectionID: collectionID,
             recordDate: recordDate,
             imageFileName: imageFileName,
             pixelWidth: pixelWidth,

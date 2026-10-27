@@ -13,6 +13,8 @@ import SwiftData
 import SwiftUI
 
 struct CalendarGalleryView: View {
+    var isActive = true
+
     @Query(sort: \MediaItem.recordDate, order: .reverse)
     private var items: [MediaItem]
 
@@ -32,34 +34,45 @@ struct CalendarGalleryView: View {
         let index = DayIndex(items: items, categoryID: selectedCategoryID)
 
         ZStack(alignment: .bottomTrailing) {
-            VStack(spacing: 0) {
-                MonthHeaderView(
-                    month: monthAnchor,
-                    onPrevious: { shiftMonth(-1) },
-                    onNext: { shiftMonth(1) },
-                    onSelectMonth: { isMonthPickerPresented = true }
-                )
-                .padding(.horizontal, Theme.Spacing.screenPadding)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        MonthHeaderView(
+                            month: monthAnchor,
+                            onPrevious: { shiftMonth(-1) },
+                            onNext: { shiftMonth(1) },
+                            onSelectMonth: { isMonthPickerPresented = true },
+                            onToday: { goToMonth(.now) }
+                        )
+                        .padding(.horizontal, Theme.Spacing.screenPadding)
 
-                MediaFilterBar(selection: $selectedCategoryID)
-                    .padding(.horizontal, Theme.Spacing.screenPadding)
+                        MediaFilterBar(selection: $selectedCategoryID)
+                            .padding(.horizontal, Theme.Spacing.screenPadding)
 
-                WeekdayHeaderView()
-                    .padding(.horizontal, Theme.Spacing.screenPadding)
-                    .padding(.bottom, Theme.Spacing.weekdayBottom)
-
-                LazyVGrid(columns: columns, spacing: Theme.Grid.spacing) {
-                    ForEach(grid.days) { day in
-                        DayCellView(day: day, items: index.items(on: day.date)) {
-                            selectedDay = day.date
+                        LazyVGrid(columns: columns, spacing: Theme.Grid.spacing) {
+                            ForEach(grid.days.filter(\.isInMonth)) { day in
+                                DayCellView(day: day, items: index.items(on: day.date)) {
+                                    selectedDay = day.date
+                                }
+                                .id(day.date)
+                            }
                         }
+                        .padding(.horizontal, Theme.Spacing.screenPadding)
+                        .padding(.bottom, 88)
+                    }
+                    .padding(.top, Theme.Spacing.appTop)
+                }
+                .scrollIndicators(.hidden)
+                .onAppear { showToday(using: proxy) }
+                .onChange(of: monthAnchor) { _, newMonth in
+                    if Calendar.current.isDate(newMonth, equalTo: .now, toGranularity: .month) {
+                        scrollToToday(using: proxy)
                     }
                 }
-                .padding(.horizontal, Theme.Spacing.screenPadding)
-
-                Spacer(minLength: 0)
+                .onChange(of: isActive) { _, active in
+                    if active { showToday(using: proxy) }
+                }
             }
-            .padding(.top, Theme.Spacing.appTop)
 
             AddRecordButton {
                 isAddingRecord = true
@@ -99,6 +112,21 @@ struct CalendarGalleryView: View {
         withAnimation(.easeInOut(duration: 0.18)) {
             monthAnchor = target
         }
+    }
+
+    private func scrollToToday(using proxy: ScrollViewProxy) {
+        let today = MosaicCalendar.startOfDay(.now)
+        Task { @MainActor in
+            await Task.yield()
+            withAnimation(.easeInOut(duration: 0.25)) {
+                proxy.scrollTo(today, anchor: .center)
+            }
+        }
+    }
+
+    private func showToday(using proxy: ScrollViewProxy) {
+        monthAnchor = MosaicCalendar.startOfMonth(.now)
+        scrollToToday(using: proxy)
     }
 }
 

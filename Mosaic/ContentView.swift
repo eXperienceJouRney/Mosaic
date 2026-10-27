@@ -4,7 +4,7 @@
 //
 //  Created by RayTse.
 //
-//  两页的结构：底部导航在 Gallery / Timeline 之间切换。
+//  四页的结构：底部导航在 Gallery / Timeline / Collections / Profile 之间切换。
 //  每页各自持有一个 NavigationStack，导航条只挂在页面的根视图上，
 //  因此进入当天记录 / 作品详情后会自动隐藏；TabView 负责保留各页的浏览状态。
 //
@@ -17,22 +17,28 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $tab) {
             NavigationStack {
-                CalendarGalleryView()
-                    .safeAreaInset(edge: .bottom, spacing: 0) {
-                        MosaicTabBar(selection: $tab)
-                    }
+                CalendarGalleryView(isActive: tab == .gallery)
             }
-            .toolbar(.hidden, for: .tabBar)
             .tag(MosaicTab.gallery)
 
             NavigationStack {
-                TimelineView()
-                    .safeAreaInset(edge: .bottom, spacing: 0) {
-                        MosaicTabBar(selection: $tab)
-                    }
+                CollectionsHomeView()
             }
-            .toolbar(.hidden, for: .tabBar)
+            .tag(MosaicTab.collections)
+
+            NavigationStack {
+                TimelineView()
+            }
             .tag(MosaicTab.timeline)
+
+            NavigationStack {
+                ProfileView()
+            }
+            .tag(MosaicTab.profile)
+        }
+        .toolbar(.hidden, for: .tabBar)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            MosaicTabBar(selection: $tab)
         }
         .tint(Theme.Palette.accent)
     }

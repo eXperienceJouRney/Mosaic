@@ -68,6 +68,8 @@ enum RecordStore {
             throw StoreError.saveFailed
         }
 
+        MediaCatalogStore.shared.remember(tags: draft.tags)
+
         return item
     }
 
@@ -120,6 +122,7 @@ enum RecordStore {
         if case .unchanged = imageChange {} else if !oldFileName.isEmpty {
             imageStore.delete(named: oldFileName)
         }
+        MediaCatalogStore.shared.remember(tags: draft.tags)
     }
 
     // MARK: - 删除

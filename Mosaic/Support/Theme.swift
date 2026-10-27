@@ -96,8 +96,8 @@ enum Theme {
     }
 
     enum Grid {
-        static let columnCount = 7
-        static let spacing: CGFloat = 4
+        static let columnCount = 3
+        static let spacing: CGFloat = 3
         static let collageSpacing: CGFloat = 2
         /// 图片默认竖版 4:3（宽 : 高 = 3 : 4），格子高度 = 日号 18pt + 图片高度。
         static let photoAspectRatio: CGFloat = 3.0 / 4.0
@@ -216,7 +216,7 @@ enum Theme {
         static let emptyTop: CGFloat = 10
     }
 
-    /// 底部导航。与时间轴参考稿一样，只有 Gallery / Timeline 两项。
+    /// 四页底部导航。
     enum TabBar {
         static let top: CGFloat = 8
         static let bottom: CGFloat = 4
@@ -224,6 +224,11 @@ enum Theme {
         static let iconLabelGap: CGFloat = 7
         static let hitHeight: CGFloat = 38
         static let hairlineHeight: CGFloat = 1
+    }
+
+    enum Collection {
+        static let coverHeight: CGFloat = 178
+        static let spacing: CGFloat = 18
     }
 
     /// 作品详情页。

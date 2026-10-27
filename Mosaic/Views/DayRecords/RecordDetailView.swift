@@ -8,12 +8,14 @@
 
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct RecordDetailView: View {
     let item: MediaItem
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Query private var collections: [MediaCollection]
 
     @State private var categoryStore = MediaCategoryStore.shared
     @State private var isEditing = false
@@ -21,6 +23,8 @@ struct RecordDetailView: View {
     @State private var isDeleted = false
     @State private var errorMessage = ""
     @State private var isShowingError = false
+    @State private var isShowingShare = false
+    @State private var shareImage: UIImage?
 
     var body: some View {
         ZStack {
@@ -50,6 +54,21 @@ struct RecordDetailView: View {
             Button("好", role: .cancel) {}
         } message: {
             Text(errorMessage)
+        }
+        .sheet(isPresented: $isShowingShare) {
+            if let shareImage {
+                VStack(spacing: 18) {
+                    Image(uiImage: shareImage).resizable().scaledToFit().clipShape(RoundedRectangle(cornerRadius: 12))
+                    ShareLink(item: Image(uiImage: shareImage), preview: SharePreview(item.title, image: Image(uiImage: shareImage))) {
+                        Label("导出分享卡片", systemImage: "square.and.arrow.up")
+                            .font(.system(size: 14, weight: .medium)).foregroundStyle(.white)
+                            .frame(maxWidth: .infinity).frame(height: 48)
+                            .background(Theme.Palette.accent, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(22).background(Theme.Palette.paper).presentationDetents([.medium, .large])
+            }
         }
     }
 
@@ -94,6 +113,14 @@ struct RecordDetailView: View {
                     if !creatorText.isEmpty {
                         creatorRow
                             .padding(.top, Theme.Detail.metaSpacing)
+                    }
+
+                    if !item.mood.isEmpty || collectionTitle != nil {
+                        HStack(spacing: 7) {
+                            if !item.mood.isEmpty { detailPill(item.mood) }
+                            if let collectionTitle { detailPill(collectionTitle) }
+                        }
+                        .padding(.top, Theme.Detail.metaSpacing)
                     }
 
                     if !item.tags.isEmpty {
@@ -192,6 +219,18 @@ struct RecordDetailView: View {
     private var actions: some View {
         VStack(spacing: Theme.Detail.actionSpacing) {
             Button {
+                shareImage = makeShareCard()
+                isShowingShare = true
+            } label: {
+                Text("导出分享卡片")
+                    .font(Theme.Typography.detailAction)
+                    .foregroundStyle(Theme.Palette.ink)
+                    .frame(maxWidth: .infinity).frame(height: 42)
+                    .background(Capsule().stroke(Theme.Palette.hairline))
+            }
+            .accessibilityIdentifier("shareRecordButton")
+
+            Button {
                 isEditing = true
             } label: {
                 Text("编辑记录")
@@ -231,6 +270,50 @@ struct RecordDetailView: View {
 
     private var noteText: String {
         item.note.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var collectionTitle: String? {
+        collections.first(where: { $0.id == item.collectionID })?.name
+    }
+
+    private var shareText: String {
+        [item.title, creatorText, category.title, MosaicCalendar.fullDateTitle(item.recordDate), noteText]
+            .filter { !$0.isEmpty }.joined(separator: "\n")
+    }
+
+    private func makeShareCard() -> UIImage {
+        let size = CGSize(width: 360, height: 450)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { context in
+            UIColor(red: 0.969, green: 0.965, blue: 0.949, alpha: 1).setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+            let paragraph = NSMutableParagraphStyle()
+            paragraph.lineBreakMode = .byTruncatingTail
+            let logo = NSAttributedString(string: "M O S A I C", attributes: [.font: UIFont.systemFont(ofSize: 10, weight: .semibold), .foregroundColor: UIColor.secondaryLabel])
+            logo.draw(at: CGPoint(x: 26, y: 20))
+            let rect = CGRect(x: 24, y: 54, width: 312, height: 240)
+            UIColor(red: 0.90, green: 0.89, blue: 0.85, alpha: 1).setFill()
+            UIBezierPath(roundedRect: rect, cornerRadius: 12).fill()
+            if let photo = ImageStore.shared.original(named: item.imageFileName) {
+                let scale = max(rect.width / photo.size.width, rect.height / photo.size.height)
+                let fitted = CGRect(x: rect.midX - photo.size.width * scale / 2, y: rect.midY - photo.size.height * scale / 2, width: photo.size.width * scale, height: photo.size.height * scale)
+                context.cgContext.saveGState()
+                UIBezierPath(roundedRect: rect, cornerRadius: 12).addClip()
+                photo.draw(in: fitted)
+                context.cgContext.restoreGState()
+            }
+            let titleAttrs: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 23, weight: .medium), .foregroundColor: UIColor.label, .paragraphStyle: paragraph]
+            item.title.draw(in: CGRect(x: 26, y: 316, width: 308, height: 58), withAttributes: titleAttrs)
+            let meta = [creatorText, category.title, MosaicCalendar.fullDateTitle(item.recordDate)].filter { !$0.isEmpty }.joined(separator: " · ")
+            meta.draw(in: CGRect(x: 26, y: 376, width: 308, height: 22), withAttributes: [.font: UIFont.systemFont(ofSize: 11), .foregroundColor: UIColor.secondaryLabel])
+            noteText.draw(in: CGRect(x: 26, y: 405, width: 308, height: 36), withAttributes: [.font: UIFont.systemFont(ofSize: 10), .foregroundColor: UIColor.darkGray, .paragraphStyle: paragraph])
+        }
+    }
+
+    private func detailPill(_ title: String) -> some View {
+        Text(title).font(Theme.Typography.tag).foregroundStyle(Theme.Palette.filterText)
+            .padding(.horizontal, 9).padding(.vertical, 4)
+            .overlay(Capsule().strokeBorder(Theme.Palette.tagBorder, lineWidth: 1))
     }
 
     // MARK: - 删除

@@ -19,9 +19,13 @@ struct AddRecordView: View {
 
     /// 传入已有记录即进入编辑模式；nil 表示新建。
     let editingItem: MediaItem?
+    private let initialDate: Date?
 
     @State private var draft: RecordDraft
     @State private var categoryStore = MediaCategoryStore.shared
+    @State private var catalogStore = MediaCatalogStore.shared
+    @Query private var allRecords: [MediaItem]
+    @Query(sort: \MediaCollection.createdAt, order: .forward) private var collections: [MediaCollection]
     @State private var pickerItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
     @State private var isLoadingPhoto = false
@@ -31,6 +35,7 @@ struct AddRecordView: View {
     @State private var isSaving = false
     @State private var errorMessage = ""
     @State private var isShowingError = false
+    @State private var isManagingCatalog = false
 
     @FocusState private var focusedField: Field?
 
@@ -41,9 +46,11 @@ struct AddRecordView: View {
         case tags
     }
 
-    init(editingItem: MediaItem? = nil) {
+    init(editingItem: MediaItem? = nil, initialDate: Date? = nil) {
         self.editingItem = editingItem
+        self.initialDate = initialDate
         var initial = editingItem.map { RecordDraft(item: $0) } ?? RecordDraft()
+        if editingItem == nil, let initialDate { initial.recordDate = initialDate }
 
         // 记录所属分类可能已经在筛选栏里被删除，此时回退到第一个可用分类，
         // 保证表单里始终有选中的类型。
@@ -85,6 +92,8 @@ struct AddRecordView: View {
 
                     fieldRows
 
+                    catalogPickers
+
                     noteField
                 }
                 .padding(.horizontal, Theme.Form.horizontalPadding)
@@ -105,6 +114,11 @@ struct AddRecordView: View {
             Button("好", role: .cancel) {}
         } message: {
             Text(errorMessage)
+        }
+        .sheet(isPresented: $isManagingCatalog) {
+            MediaCatalogManagerSheet(store: catalogStore)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         }
     }
 
@@ -237,6 +251,73 @@ struct AddRecordView: View {
                 .accessibilityIdentifier("tagsField")
         }
         .padding(.vertical, Theme.Form.rowVertical)
+    }
+
+    private var catalogPickers: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 9) {
+                catalogHeader("当时的心情")
+                FlowLayout(spacing: 7) {
+                ForEach(catalogStore.moods, id: \.self) { mood in
+                        choiceChip(mood, selected: draft.mood == mood) {
+                            draft.mood = draft.mood == mood ? "" : mood
+                        }
+                    }
+                }
+            }
+            VStack(alignment: .leading, spacing: 9) {
+                catalogHeader("常用标签")
+                let suggestions = Array(Set(allRecords.flatMap(\.tags) + catalogStore.tags)).sorted().prefix(12)
+                if suggestions.isEmpty {
+                    Text("输入标签后会保存在这条记录中")
+                        .font(.system(size: 10)).foregroundStyle(Theme.Palette.muted)
+                } else {
+                    FlowLayout(spacing: 7) {
+                        ForEach(Array(suggestions), id: \.self) { tag in
+                            let selected = draft.tags.contains { $0.localizedCaseInsensitiveCompare(tag) == .orderedSame }
+                            choiceChip(tag, selected: selected) {
+                                var tags = draft.tags
+                                if selected { tags.removeAll { $0.localizedCaseInsensitiveCompare(tag) == .orderedSame } }
+                                else { tags.append(tag) }
+                                draft.tagsText = tags.joined(separator: ", ")
+                            }
+                        }
+                    }
+                }
+            }
+            VStack(alignment: .leading, spacing: 9) {
+                fieldLabel("收藏集")
+                FlowLayout(spacing: 7) {
+                    choiceChip("不归入收藏集", selected: draft.collectionID == nil) { draft.collectionID = nil }
+                    ForEach(collections) { collection in
+                        choiceChip(collection.name, selected: draft.collectionID == collection.id) {
+                            draft.collectionID = collection.id
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func catalogHeader(_ title: String) -> some View {
+        HStack {
+            fieldLabel(title)
+            Spacer()
+            Button("管理") { isManagingCatalog = true }
+                .font(.system(size: 10)).foregroundStyle(Theme.Palette.muted)
+                .accessibilityLabel("管理\(title)")
+        }
+    }
+
+    private func choiceChip(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title).font(.system(size: 10))
+                .foregroundStyle(selected ? Theme.Palette.onAccent : Theme.Palette.filterText)
+                .padding(.horizontal, 11).padding(.vertical, 7)
+                .background(Capsule().fill(selected ? Theme.Palette.accent : .clear))
+                .overlay(Capsule().stroke(selected ? Theme.Palette.accent : Theme.Palette.hairline))
+        }
+        .buttonStyle(.plain)
     }
 
     private var noteField: some View {

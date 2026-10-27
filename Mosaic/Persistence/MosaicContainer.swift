@@ -10,7 +10,7 @@ import Foundation
 import SwiftData
 
 enum MosaicContainer {
-    static let schema = Schema([MediaItem.self])
+    static let schema = Schema([MediaItem.self, MediaCollection.self])
 
     /// 正式 App 使用的容器。
     static let shared: ModelContainer = {
